@@ -229,6 +229,7 @@ kubectl apply -f path/to/ingress.yaml
 Откройте файл hosts:
 
 Windows: C:\Windows\System32\drivers\etc\hosts
+
 Linux и macOS: /etc/hosts
 
 Добавьте следующую строку, заменив <minikube_ip> на IP-адрес Minikube:
