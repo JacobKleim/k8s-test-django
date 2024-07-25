@@ -235,7 +235,7 @@ Linux и macOS: /etc/hosts
 Добавьте следующую строку, заменив <minikube_ip> на IP-адрес Minikube:
 
 ```sh
-<minikube_ip> star-burger.test
+<minikube_ip> test-site.test
 ```
 Найдите IP-адрес Minikube с помощью команды:
 ```sh
