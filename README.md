@@ -98,9 +98,9 @@ echo -n "True" | base64
 
 ### Создайте файл манифеста для Secret
 
-Поместите файл с секретами отдельно от репозитория: он не должен быть в публично доступе.
+Поместите файл с секретами отдельно от репозитория: он не должен быть в публичном доступе.
 
-```sh
+```yaml
 apiVersion: v1
 kind: Secret
 metadata:
@@ -169,24 +169,6 @@ spec:
             secretKeyRef:
               name: django-secrets
               key: DEBUG
----
-
-apiVersion: v1
-kind: Service
-metadata:
-  name: django-pod-service
-  labels:
-    env: prod
-spec:
-  selector:
-    app: django
-  type: NodePort
-  ports:
-  - name: app-listener
-    port: 80
-    targetPort: 80
-    nodePort: 30036
-    protocol: TCP
 ```
 
 ### Перезапустите поды для применения изменений
@@ -194,4 +176,67 @@ spec:
 Удалите существующие поды, чтобы они были перезапущены с новыми переменными окружения:
 ```sh
 kubectl delete pods -l app=django
+```
+
+## Настройка Ingress для вашего приложения
+Этот раздел README объясняет, как настроить Ingress для вашего Django приложения, чтобы сделать его доступным через доменное имя или IP-адрес без использования проброса портов.
+
+### Установите Ingress Controller
+
+```sh
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/cloud/deploy.yaml
+```
+Проверьте статус контроллера:
+
+```sh
+kubectl get pods -n ingress-nginx
+```
+Убедитесь, что все поды запущены и работают
+
+### Создайте Ingress ресурс
+Создайте файл ingress.yaml со следующим содержимым:
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-hosts
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+  - host: site-test.test
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: django-pod-service
+            port:
+              number: 80
+```
+### Примените Ingress манифест
+
+```sh
+kubectl apply -f path/to/ingress.yaml
+```
+
+### Обновите файл hosts (только для локальной среды)
+
+Если вы используете локальную среду разработки и хотите протестировать Ingress, добавьте запись в файл hosts на вашей машине.
+
+Откройте файл hosts:
+
+Windows: C:\Windows\System32\drivers\etc\hosts
+Linux и macOS: /etc/hosts
+
+Добавьте следующую строку, заменив <minikube_ip> на IP-адрес Minikube:
+
+```sh
+<minikube_ip> star-burger.test
+```
+Найдите IP-адрес Minikube с помощью команды:
+```sh
+minikube ip
 ```

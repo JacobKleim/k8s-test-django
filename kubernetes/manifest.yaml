@@ -51,10 +51,9 @@ metadata:
 spec:   
   selector:  
     app: django 
-  type: NodePort
+  type: ClusterIP
   ports: 
     - name: app-listener
       port: 80
       targetPort: 80
-      nodePort: 30036
       protocol: TCP      
