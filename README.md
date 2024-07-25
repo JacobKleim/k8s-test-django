@@ -75,3 +75,123 @@ $ docker compose build web
 `ALLOWED_HOSTS` -- настройка Django со списком разрешённых адресов. Если запрос прилетит на другой адрес, то сайт ответит ошибкой 400. Можно перечислить несколько адресов через запятую, например `127.0.0.1,192.168.0.1,site.test`. [Документация Django](https://docs.djangoproject.com/en/3.2/ref/settings/#allowed-hosts).
 
 `DATABASE_URL` -- адрес для подключения к базе данных PostgreSQL. Другие СУБД сайт не поддерживает. [Формат записи](https://github.com/jacobian/dj-database-url#url-schema).
+
+
+## Как создать Secret в кластере:
+
+### Закодируйте значения в base64
+
+Примеры команд для Unix-подобных систем:
+```sh
+echo -n "123abc" | base64
+echo -n "postgres://test_k8s:OwOtBep9Frut@172.20.10.2:5432/test_k8s" | base64
+echo -n "192.168.59.102" | base64
+echo -n "True" | base64
+```
+Примеры команд для Windows PowerShell:
+```sh
+[Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes("123ase"))
+[Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes("postgres://test_k8s:OwOtBep9Frut@172.20.10.2:5432/test_k8s"))
+[Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes("192.168.59.102"))
+[Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes("True"))
+```
+
+### Создайте файл манифеста для Secret
+
+Поместите файл с секретами отдельно от репозитория: он не должен быть в публично доступе.
+
+```sh
+apiVersion: v1
+kind: Secret
+metadata:
+  name: django-secrets
+type: Opaque
+data:
+  SECRET_KEY: 
+  DATABASE_URL: cG9zdGdyZXM6Ly90ZXN0X2s4czpPd090QmVwOUZydXRA MTcyLjIwLjEwLjI6NTQzMi90ZXN0X2s4cw==  
+  ALLOWED_HOSTS: MTkyLjE2OC41OS4xMDI=  
+  DEBUG: VHJ1ZQ== 
+```
+
+### Примените манифест Secret
+```sh
+kubectl apply -f path/to/secrets.yaml
+```
+
+### Обновите Deployment для использования Secret
+```sh
+kubectl apply -f path/to/deployment.yaml
+```
+
+### Примените обновленный манифест Deployment
+
+В вашем манифесте Deployment, измените секцию env, чтобы использовать Secret:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: django-app
+  labels:
+    app: django
+spec:
+  selector:
+    matchLabels:
+      app: django
+  template:
+    metadata:
+      labels:
+        app: django
+    spec:
+      containers:
+      - name: django-cont
+        image: django_app:test
+        ports:
+        - containerPort: 80 
+        env:
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: django-secrets
+              key: SECRET_KEY
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: django-secrets
+              key: DATABASE_URL
+        - name: ALLOWED_HOSTS
+          valueFrom:
+            secretKeyRef:
+              name: django-secrets
+              key: ALLOWED_HOSTS
+        - name: DEBUG
+          valueFrom:
+            secretKeyRef:
+              name: django-secrets
+              key: DEBUG
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: django-pod-service
+  labels:
+    env: prod
+spec:
+  selector:
+    app: django
+  type: NodePort
+  ports:
+  - name: app-listener
+    port: 80
+    targetPort: 80
+    nodePort: 30036
+    protocol: TCP
+```
+
+### Перезапустите поды для применения изменений
+
+Удалите существующие поды, чтобы они были перезапущены с новыми переменными окружения:
+```sh
+kubectl delete pods -l app=django
+```
