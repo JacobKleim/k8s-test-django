@@ -304,6 +304,6 @@ kubectl create job --from=cronjob/django-clearsessions django-clearsessions-once
 
 **Проверьте статус созданной Job**
 ```sh
-kubectl get cronjobs
+kubectl get jobs
 ```
 Подождите указанный период времени и проверьте, что завершенные job удалены.
