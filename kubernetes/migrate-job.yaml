@@ -8,7 +8,7 @@ spec:
       containers:
       - name: django-migrate
         image: django_app:test
-        command: ["python"]
+        command: ["python3"]
         args: ["manage.py", "migrate", "--noinput"]
         env:
         - name: SECRET_KEY
