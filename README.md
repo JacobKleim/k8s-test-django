@@ -257,10 +257,10 @@ metadata:
   name: django-clearsessions
 spec:
   schedule: "0 0 * * *"
-  startingDeadlineSeconds: 10
+  startingDeadlineSeconds: 60
   jobTemplate:
     spec:
-      ttlSecondsAfterFinished: 20
+      ttlSecondsAfterFinished: 3600
       template:
         spec:
           restartPolicy: Never
@@ -306,3 +306,4 @@ kubectl create job --from=cronjob/django-clearsessions django-clearsessions-once
 ```sh
 kubectl get cronjobs
 ```
+Подождите указанный период времени и проверьте, что завершенные job удалены.

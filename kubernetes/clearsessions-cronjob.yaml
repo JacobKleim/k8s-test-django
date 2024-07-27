@@ -7,7 +7,7 @@ spec:
   startingDeadlineSeconds: 60
   jobTemplate:
     spec:
-      ttlSecondsAfterFinished: 100
+      ttlSecondsAfterFinished: 3600
       template:
         spec:
           restartPolicy: Never
