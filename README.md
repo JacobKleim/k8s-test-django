@@ -241,3 +241,68 @@ Linux и macOS: /etc/hosts
 ```sh
 minikube ip
 ```
+
+## Автоматическая очистка сессий в Django
+
+Для автоматической очистки сессий в Django используется CronJob в Kubernetes. CronJob запускает команду `django-admin clearsessions` по расписанию.
+
+### Шаги для настройки CronJob:
+
+**Создайте файл `clearsessions-cronjob.yaml` со следующим содержимым:**
+
+```yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: django-clearsessions
+spec:
+  schedule: "0 0 * * *"
+  startingDeadlineSeconds: 10
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: 20
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+          - name: django-clearsessions
+            image: django_app:test
+            command: ["python"]
+            args: ["manage.py", "clearsessions"]
+            env:
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: django-secrets
+                  key: SECRET_KEY
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: django-secrets
+                  key: DATABASE_URL
+            - name: ALLOWED_HOSTS
+              valueFrom:
+                secretKeyRef:
+                  name: django-secrets
+                  key: ALLOWED_HOSTS
+```                
+
+**Примените манифест для создания CronJob**
+```sh
+kubectl apply -f path/to/clearsessions-cronjob.yaml
+```
+
+**Проверьте созданный CronJob**
+```sh
+kubectl get cronjobs
+```
+
+**Принудительно создайте новую Job из CronJob для тестирования**
+```sh
+kubectl create job --from=cronjob/django-clearsessions django-clearsessions-once
+```
+
+**Проверьте статус созданной Job**
+```sh
+kubectl get cronjobs
+```
