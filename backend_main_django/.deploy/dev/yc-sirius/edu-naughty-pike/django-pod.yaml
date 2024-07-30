@@ -1,11 +1,19 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: nginx
+  name: django
   namespace: edu-naughty-pike
 spec:
   containers:
-  - name: django-cont
+  - name: django
     image: django_app:test
     ports:
     - containerPort: 80
+    volumeMounts:
+    - name: pg-root-cert
+      mountPath: /etc/postgresql/certs
+      readOnly: true
+  volumes:
+  - name: pg-root-cert
+    secret:
+      secretName: pg-root-cert  
