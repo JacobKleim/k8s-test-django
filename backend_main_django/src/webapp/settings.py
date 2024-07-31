@@ -81,6 +81,10 @@ DATABASES = {
     'default': env.dj_db_url('DATABASE_URL', 'postgres://...'),
 }
 
+DATABASES['default']['OPTIONS'] = {
+    'sslmode': 'require',
+    'sslrootcert': '/etc/postgresql/certs/root.crt',
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators

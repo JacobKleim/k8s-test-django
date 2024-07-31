@@ -3,12 +3,35 @@ kind: Pod
 metadata:
   name: django
   namespace: edu-naughty-pike
+  labels:
+    app: django
 spec:
   containers:
   - name: django
-    image: django_app:test
+    image: jacobkl/django_site:6356c9b
     ports:
     - containerPort: 80
+    env:
+    - name: SECRET_KEY
+      valueFrom:
+        secretKeyRef:
+          name: django-secrets
+          key: SECRET_KEY
+    - name: DATABASE_URL
+      valueFrom:
+        secretKeyRef:
+          name: postgres
+          key: url
+    - name: ALLOWED_HOSTS
+      valueFrom:
+        secretKeyRef:
+          name: django-secrets
+          key: ALLOWED_HOSTS
+    - name: DEBUG
+      valueFrom:
+        secretKeyRef:
+          name: django-secrets
+          key: DEBUG
     volumeMounts:
     - name: pg-root-cert
       mountPath: /etc/postgresql/certs
@@ -16,4 +39,5 @@ spec:
   volumes:
   - name: pg-root-cert
     secret:
-      secretName: pg-root-cert  
+      secretName: pg-root-cert      
+  restartPolicy: Never

@@ -4,3 +4,4 @@ __pycache__/
 *$py.class
 .env
 ubuntu-pod.yaml
+django-pod.yaml

@@ -145,7 +145,7 @@ spec:
     spec:
       containers:
       - name: django-cont
-        image: django_app:test
+        image: django_site:latest
         ports:
         - containerPort: 80 
         env:
