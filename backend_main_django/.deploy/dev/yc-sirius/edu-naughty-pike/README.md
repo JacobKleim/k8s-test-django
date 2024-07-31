@@ -1,6 +1,47 @@
 # Документация по деплою
 
 
+## Как собрать и опубликовать Docker образ
+
+### Сборка образа
+
+1. Перейдите в корневую директорию проекта:
+    ```sh
+    cd /path/to/your/project
+    ```
+
+2. Убедитесь, что у вас есть Dockerfile и файл requirements.txt.
+
+3. Получите хэш текущего коммита git:
+    ```sh
+    COMMIT_HASH=$(git rev-parse --short HEAD)
+    ```
+
+4. Соберите Docker образ:
+    ```sh
+    docker build -t your_dockerhub_username/django_site:$COMMIT_HASH .
+    ```
+
+### Публикация образа
+
+1. Войдите в Docker Hub:
+    ```sh
+    docker login
+    ```
+
+2. Отправьте образ в Docker Hub:
+    ```sh
+    docker push your_dockerhub_username/django_site:$COMMIT_HASH
+    ```
+
+### Загрузка образа
+
+Чтобы загрузить старый образ по хэшу коммита, выполните:
+```sh
+docker pull your_dockerhub_username/django_site:<COMMIT_HASH>
+```
+
+
 ## Подготовьте Pod
 
 **Создайте файл django-pod.yaml со следующим содержимым:**
@@ -14,7 +55,7 @@ metadata:
 spec:
   containers:
   - name: django
-    image: django_app:test
+    image: django_site:latest
     ports:
     - containerPort: 80
 ```
@@ -100,7 +141,7 @@ kubectl create secret generic <secret-name> \
   --namespace=<namespace>
 ```
 
-**Создание секрета из файла**
+### Создание секрета из файла
 
 Если у вас есть файл, который вы хотите использовать для создания секрета, используйте команду
 
@@ -150,14 +191,14 @@ env:
 
 Секрет из файла
 ```yaml
-volumeMounts:
+  volumeMounts:
     - name: secret-volume
       mountPath: /etc/secrets
       readOnly: true
-  volumes:
-  - name: secret-volume
-    secret:
-      secretName: my-database-secret
+volumes:
+- name: secret-volume
+secret:
+    secretName: my-database-secret
 ```
 
 **Пример манифеста:**
